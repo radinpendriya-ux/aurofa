@@ -8,19 +8,18 @@ export default async function handler(req, res) {
             const apiKey = "apicoid_live_w95eyThfnTHYoX0TPS0wKz40HjGNLtDJdXE1TDbRiRc"; // <--- MASUKKAN API KEY ANDA
 
             try {
-                // Server Vercel menembak API Api.co.id (Aman dari CORS browser!)
-                const response = await fetch("https://api.api.co.id/v1/messages", { 
+                // Server Vercel menembak URL Endpoint resmi Api.co.id
+                const response = await fetch("https://crm.api.co.id/api/v1/public/messages/send", { 
                     method: "POST",
                     headers: {
                         "Authorization": "Bearer " + apiKey,
                         "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
-                        to: nomorTujuan,
-                        type: "text",
-                        text: {
-                            body: "Halo! Pesan ini sukses dikirim aman dari backend Vercel aurofa.com 🚀"
-                        }
+                        phone_number: nomorTujuan,
+                        channel: "whatsapp",
+                        message_type: "text",
+                        content: "Halo! Pesan ini sukses dikirim aman dari backend Vercel aurofa.com 🚀"
                     })
                 });
 
