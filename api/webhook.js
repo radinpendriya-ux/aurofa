@@ -1,7 +1,45 @@
 import { kv } from '@vercel/kv';
 
+// Helper: dapatkan access token baru dari refresh token
+async function getGoogleAccessToken() {
+    const response = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+            client_id: process.env.GOOGLE_CLIENT_ID,
+            client_secret: process.env.GOOGLE_CLIENT_SECRET,
+            refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
+            grant_type: 'refresh_token'
+        })
+    });
+    const data = await response.json();
+    return data.access_token;
+}
+
+// Helper: buat event di Google Calendar
+async function buatEventCalendar({ judul, tanggal, jam_mulai, jam_selesai }) {
+    const accessToken = await getGoogleAccessToken();
+    const calendarId = process.env.GOOGLE_CALENDAR_ID;
+
+    const response = await fetch(
+        `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`,
+        {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + accessToken,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                summary: judul,
+                start: { dateTime: `${tanggal}T${jam_mulai}:00`, timeZone: 'Asia/Jakarta' },
+                end: { dateTime: `${tanggal}T${jam_selesai}:00`, timeZone: 'Asia/Jakarta' }
+            })
+        }
+    );
+    return await response.json();
+}
+
 export default async function handler(req, res) {
-    // 1. VERIFIKASI WEBHOOK DARI META (Permintaan GET)
     if (req.method === 'GET') {
         const mode = req.query['hub.mode'];
         const token = req.query['hub.verify_token'];
@@ -14,17 +52,11 @@ export default async function handler(req, res) {
         return res.status(200).send('Jalur Webhook Aktif!');
     }
 
-    // 2. PROSES TERIMA DATA DARI META (Permintaan POST)
     if (req.method === 'POST') {
         const body = req.body;
-
-        console.log("=== DATA MASUK DARI META ===");
-        console.log(JSON.stringify(body, null, 2));
-
         const changeValue = body?.entry?.[0]?.changes?.[0]?.value;
 
         if (changeValue && changeValue.statuses) {
-            console.log("-> Update status pengiriman. Diabaikan.");
             return res.status(200).json({ status: 'Status update diabaikan' });
         }
 
@@ -33,53 +65,48 @@ export default async function handler(req, res) {
             const nomorPengirim = messageData.from;
             const teksMasuk = messageData.text?.body;
 
-            console.log(`-> Chat masuk dari ${nomorPengirim}: "${teksMasuk}"`);
-
             if (!teksMasuk) {
-                console.log("-> Bukan tipe teks. Diabaikan.");
                 return res.status(200).json({ status: 'Bukan teks' });
             }
 
             const metaAccessToken = process.env.META_ACCESS_TOKEN;
             const metaPhoneNumberId = "1187789877749779";
             const groqApiKey = process.env.GROQ_API_KEY;
-
             const historyKey = `chat_history:${nomorPengirim}`;
 
             try {
-                // A. RESET CHAT KALAU USER KETIK "reset"
                 if (teksMasuk.trim().toLowerCase() === 'reset') {
                     await kv.del(historyKey);
-                    await fetch(`https://graph.facebook.com/v25.0/${metaPhoneNumberId}/messages`, {
-                        method: "POST",
-                        headers: {
-                            "Authorization": "Bearer " + metaAccessToken,
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({
-                            messaging_product: "whatsapp",
-                            recipient_type: "individual",
-                            to: nomorPengirim,
-                            type: "text",
-                            text: { body: "Oke, percakapan sudah direset. Mulai obrolan baru ya!" }
-                        })
-                    });
+                    await kirimWA(metaAccessToken, metaPhoneNumberId, nomorPengirim, "Oke, percakapan sudah direset.");
                     return res.status(200).json({ status: 'Chat direset' });
                 }
 
-                // B. AMBIL HISTORY CHAT SEBELUMNYA
                 let history = await kv.get(historyKey) || [];
-                console.log(`-> History ditemukan: ${history.length} pesan`);
-
-                // C. TAMBAHKAN PESAN BARU DARI USER
                 history.push({ role: "user", content: teksMasuk });
+                if (history.length > 10) history = history.slice(-10);
 
-                if (history.length > 10) {
-                    history = history.slice(-10);
-                }
+                // Tanggal hari ini untuk konteks AI (biar paham "besok", "lusa", dll)
+                const sekarang = new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta' });
+                const hariIni = new Date(sekarang).toISOString().split('T')[0];
 
-                // D. TANYA KE GROQ AI DENGAN SELURUH HISTORY
-                console.log("-> Menghubungi Groq AI...");
+                const tools = [{
+                    type: "function",
+                    function: {
+                        name: "buat_jadwal_calendar",
+                        description: "Membuat/menjadwalkan event baru di Google Calendar user",
+                        parameters: {
+                            type: "object",
+                            properties: {
+                                judul: { type: "string", description: "Judul atau nama acara/meeting" },
+                                tanggal: { type: "string", description: "Tanggal acara, format YYYY-MM-DD" },
+                                jam_mulai: { type: "string", description: "Jam mulai, format HH:MM 24 jam" },
+                                jam_selesai: { type: "string", description: "Jam selesai, format HH:MM 24 jam" }
+                            },
+                            required: ["judul", "tanggal", "jam_mulai", "jam_selesai"]
+                        }
+                    }
+                }];
+
                 const groqResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
                     method: "POST",
                     headers: {
@@ -89,49 +116,45 @@ export default async function handler(req, res) {
                     body: JSON.stringify({
                         model: "llama-3.1-8b-instant",
                         messages: [
-                            { role: "system", content: "Kamu adalah Aurora AI Agent. Jawablah pesan customer dengan ramah, singkat, dan solutif. Ingat konteks percakapan sebelumnya." },
+                            {
+                                role: "system",
+                                content: `Kamu adalah Aurora AI Agent. Jawab pesan dengan ramah dan singkat. Hari ini tanggal ${hariIni} (zona waktu Asia/Jakarta). Kalau user minta dibuatkan jadwal/meeting/acara, gunakan function buat_jadwal_calendar dengan tanggal absolut (hitung sendiri kalau user bilang "besok"/"lusa"/dll berdasarkan tanggal hari ini).`
+                            },
                             ...history
-                        ]
+                        ],
+                        tools: tools,
+                        tool_choice: "auto"
                     })
                 });
 
                 const groqData = await groqResponse.json();
+                if (!groqResponse.ok) console.error("❌ Groq error:", JSON.stringify(groqData));
 
-                if (!groqResponse.ok) {
-                    console.error("❌ Groq error:", JSON.stringify(groqData));
+                const pesanAI = groqData.choices?.[0]?.message;
+                let balasanFinal;
+
+                // CEK APAKAH AI MEMANGGIL FUNCTION BUAT JADWAL
+                if (pesanAI?.tool_calls?.[0]) {
+                    const toolCall = pesanAI.tool_calls[0];
+                    const args = JSON.parse(toolCall.function.arguments);
+                    console.log("-> AI minta buat jadwal:", args);
+
+                    const hasilCalendar = await buatEventCalendar(args);
+
+                    if (hasilCalendar.id) {
+                        balasanFinal = `✅ Jadwal berhasil dibuat!\n\n📌 ${args.judul}\n📅 ${args.tanggal}\n⏰ ${args.jam_mulai} - ${args.jam_selesai} WIB`;
+                    } else {
+                        console.error("❌ Gagal buat event:", JSON.stringify(hasilCalendar));
+                        balasanFinal = "Maaf, gagal membuat jadwal di Calendar. Coba lagi ya.";
+                    }
+                } else {
+                    balasanFinal = pesanAI?.content || "Maaf, Aurora AI sedang mengalami gangguan teknis.";
                 }
 
-                const jawabanAI = groqData.choices?.[0]?.message?.content || "Maaf, Aurora AI sedang mengalami gangguan teknis.";
-                console.log("-> Jawaban Groq AI:", jawabanAI);
-
-                // E. TAMBAHKAN JAWABAN AI KE HISTORY, LALU SIMPAN LAGI
-                history.push({ role: "assistant", content: jawabanAI });
+                history.push({ role: "assistant", content: balasanFinal });
                 await kv.set(historyKey, history);
 
-                // F. BALAS CHAT KE WHATSAPP
-                console.log("-> Mengirim balasan ke WhatsApp...");
-                const sendWaResponse = await fetch(`https://graph.facebook.com/v25.0/${metaPhoneNumberId}/messages`, {
-                    method: "POST",
-                    headers: {
-                        "Authorization": "Bearer " + metaAccessToken,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        messaging_product: "whatsapp",
-                        recipient_type: "individual",
-                        to: nomorPengirim,
-                        type: "text",
-                        text: { body: jawabanAI }
-                    })
-                });
-
-                const sendWaData = await sendWaResponse.json();
-                console.log("-> Status Kirim Balasan WhatsApp:", JSON.stringify(sendWaData));
-
-                if (!sendWaResponse.ok) {
-                    console.error("❌ Kirim WA gagal:", JSON.stringify(sendWaData));
-                    return res.status(200).json({ status: 'Gagal kirim WA', detail: sendWaData });
-                }
+                await kirimWA(metaAccessToken, metaPhoneNumberId, nomorPengirim, balasanFinal);
 
                 return res.status(200).json({ status: 'Sukses' });
 
@@ -145,4 +168,23 @@ export default async function handler(req, res) {
     }
 
     return res.status(405).send('Method Not Allowed');
+}
+
+// Helper kirim pesan WA (biar tidak duplikat kode)
+async function kirimWA(token, phoneNumberId, to, teks) {
+    const response = await fetch(`https://graph.facebook.com/v25.0/${phoneNumberId}/messages`, {
+        method: "POST",
+        headers: {
+            "Authorization": "Bearer " + token,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            messaging_product: "whatsapp",
+            recipient_type: "individual",
+            to: to,
+            type: "text",
+            text: { body: teks }
+        })
+    });
+    return await response.json();
 }
