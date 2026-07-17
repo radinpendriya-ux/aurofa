@@ -1,7 +1,5 @@
 export default async function handler(req, res) {
-    // ------------------------------------------------------------------------
     // 1. VERIFIKASI WEBHOOK DARI META (Permintaan GET)
-    // ------------------------------------------------------------------------
     if (req.method === 'GET') {
         const mode = req.query['hub.mode'];
         const token = req.query['hub.verify_token'];
@@ -14,32 +12,44 @@ export default async function handler(req, res) {
         return res.status(200).send('Jalur Webhook Aktif!');
     }
 
-    // ------------------------------------------------------------------------
-    // 2. PROSES TERIMA CHAT & BALAS PAKAI GROQ AI (Permintaan POST)
-    // ------------------------------------------------------------------------
+    // 2. PROSES TERIMA DATA DARI META (Permintaan POST)
     if (req.method === 'POST') {
         const body = req.body;
 
-        // Cek apakah ada data pesan masuk resmi dari WhatsApp Meta
-        if (body.object === 'whatsapp_business_account' && body.entry?.[0]?.changes?.[0]?.value?.messages?.[0]) {
-            
-            // ==================== KONFIGURASI KUNCI UTAMA ====================
-            const metaAccessToken = process.env.META_ACCESS_TOKEN;
-            const metaPhoneNumberId = "1187789877749779"; // ID Nomor Anda yang tadi
-            const groqApiKey = process.env.GROQ_API_KEY; //
-            // =================================================================
+        // Cetak data mentah yang masuk dari Meta ke Vercel Logs biar gampang kita pantau
+        console.log("=== DATA MASUK DARI META ===");
+        console.log(JSON.stringify(body, null, 2));
 
-            const messageData = body.entry[0].changes[0].value.messages[0];
-            const nomorPengirim = messageData.from; // Nomor WA Anda yang nge-chat
+        // Ambil data value perubahan dari WhatsApp
+        const changeValue = body?.entry?.[0]?.changes?.[0]?.value;
+
+        // JIKA YANG MASUK ADALAH STATUS PESAN (Delivered / Read), ABAIKAN AGAR TIDAK LOOPING
+        if (changeValue && changeValue.statuses) {
+            console.log("-> Ini adalah update status pengiriman pesan (Delivered/Read). Diabaikan.");
+            return res.status(200).json({ status: 'Status update diabaikan' });
+        }
+
+        // JIKA YANG MASUK ADALAH PESAN TEKS BARU (Ada objek messages)
+        if (changeValue && changeValue.messages?.[0]) {
+            const messageData = changeValue.messages[0];
+            const nomorPengirim = messageData.from; // Nomor WA Anda
             const teksMasuk = messageData.text?.body; // Isi chat Anda
 
-            // Jika yang masuk bukan pesan teks (misal gambar/stiker), abaikan agar tidak error
+            console.log(`-> Menemukan Chat Masuk dari ${nomorPengirim}: "${teksMasuk}"`);
+
             if (!teksMasuk) {
-                return res.status(200).json({ status: 'Bukan pesan teks' });
+                console.log("-> Chat masuk bukan bertipe teks. Diabaikan.");
+                return res.status(200).json({ status: 'Bukan teks' });
             }
 
+            // KONFIGURASI KUNCI UTAMA (Membaca dari Environment Variables Vercel)
+            const metaAccessToken = process.env.META_ACCESS_TOKEN;
+            const metaPhoneNumberId = "1187789877749779"; 
+            const groqApiKey = process.env.GROQ_API_KEY;
+
             try {
-                // A. OPER CHAT KE GROQ AI
+                console.log("-> Menghubungi Groq AI...");
+                // A. TANYA KE GROQ AI
                 const groqResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
                     method: "POST",
                     headers: {
@@ -47,7 +57,7 @@ export default async function handler(req, res) {
                         "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
-                        model: "llama3-8b-8192", // Model AI super cepat milik Groq
+                        model: "llama3-8b-8192",
                         messages: [
                             { role: "system", content: "Kamu adalah Aurora AI Agent. Jawablah pesan customer dengan ramah, singkat, dan solutif." },
                             { role: "user", content: teksMasuk }
@@ -57,9 +67,11 @@ export default async function handler(req, res) {
 
                 const groqData = await groqResponse.json();
                 const jawabanAI = groqData.choices?.[0]?.message?.content || "Maaf, Aurora AI sedang mengalami gangguan teknis.";
+                console.log("-> Jawaban Groq AI:", jawabanAI);
 
-                // B. KIRIM BALASAN JAWABAN AI BALIK KE WHATSAPP ANDA
-                await fetch(`https://graph.facebook.com/v25.0/${metaPhoneNumberId}/messages`, {
+                console.log("-> Mengirim balasan kembali ke WhatsApp Anda...");
+                // B. BALAS CHAT KE WHATSAPP PENGIRIM
+                const sendWaResponse = await fetch(`https://graph.facebook.com/v25.0/${metaPhoneNumberId}/messages`, {
                     method: "POST",
                     headers: {
                         "Authorization": "Bearer " + metaAccessToken,
@@ -74,20 +86,18 @@ export default async function handler(req, res) {
                     })
                 });
 
-                return res.status(200).json({ status: 'Sukses direspon oleh Groq AI' });
+                const sendWaData = await sendWaResponse.json();
+                console.log("-> Status Kirim Balasan WhatsApp:", JSON.stringify(sendWaData));
+
+                return res.status(200).json({ status: 'Sukses' });
 
             } catch (err) {
-                console.error("Gagal memproses AI:", err.message);
+                console.error("❌ ERROR PROSES:", err.message);
                 return res.status(500).json({ error: err.message });
             }
         }
 
-        // Ini logika tombol kirim manual website Anda agar tetap berfungsi jika diklik
-        if (body && body.aksi === 'kirim_wa') {
-            return res.status(200).json({ status: "Fitur tombol manual aktif" });
-        }
-
-        return res.status(200).json({ status: 'Event diabaikan' });
+        return res.status(200).json({ status: 'Format data tidak dikenal/tidak diproses' });
     }
 
     return res.status(405).send('Method Not Allowed');
