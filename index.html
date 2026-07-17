@@ -125,35 +125,6 @@
         <!-- Judul Sosial Media -->
         <div class="links-title">Hubungi Saya</div>
 
-       <!-- 1. INI TOMBOLNYA (Taruh di bawah tulisan Hubungi Saya) -->
-<button onclick="kirimPesanWA()" class="link-card" style="width: 100%; border: none; cursor: pointer; text-align: center; background-color: #25D366; color: white;">
-    🚀 Tes Kirim WA Otomatis
-</button>
-
-<!-- 2. INI RUMAH KODENYA -->
-<script>
-async function kirimPesanWA() {
-    try {
-        // Website Anda memanggil fungsi backend-nya sendiri di Vercel
-        const response = await fetch("/api/webhook", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                aksi: "kirim_wa" // memberi tahu backend untuk mengirim WA
-            })
-        });
-
-        const hasil = await response.json();
-        alert(hasil.status);
-    } catch (error) {
-        alert("Terjadi error koneksi ke server Aurofa.");
-        console.error(error);
-    }
-}
-</script>
-
         <!-- Daftar Tombol Link (Ganti tanda # dengan link asli Anda nanti) -->
         <a href="https://www.instagram.com/radin_pendriya/" class="link-card" target="_blank">📸 Instagram</a>
         <a href="https://www.linkedin.com/in/radin-pendriya-738176267/" class="link-card" target="_blank">💼 LinkedIn</a>
