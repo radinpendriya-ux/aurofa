@@ -1,3 +1,5 @@
+import { kv } from '@vercel/kv';
+
 export default async function handler(req, res) {
     // 1. VERIFIKASI WEBHOOK DARI META (Permintaan GET)
     if (req.method === 'GET') {
@@ -16,40 +18,68 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
         const body = req.body;
 
-        // Cetak data mentah yang masuk dari Meta ke Vercel Logs biar gampang kita pantau
         console.log("=== DATA MASUK DARI META ===");
         console.log(JSON.stringify(body, null, 2));
 
-        // Ambil data value perubahan dari WhatsApp
         const changeValue = body?.entry?.[0]?.changes?.[0]?.value;
 
-        // JIKA YANG MASUK ADALAH STATUS PESAN (Delivered / Read), ABAIKAN AGAR TIDAK LOOPING
         if (changeValue && changeValue.statuses) {
-            console.log("-> Ini adalah update status pengiriman pesan (Delivered/Read). Diabaikan.");
+            console.log("-> Update status pengiriman. Diabaikan.");
             return res.status(200).json({ status: 'Status update diabaikan' });
         }
 
-        // JIKA YANG MASUK ADALAH PESAN TEKS BARU (Ada objek messages)
         if (changeValue && changeValue.messages?.[0]) {
             const messageData = changeValue.messages[0];
-            const nomorPengirim = messageData.from; // Nomor WA Anda
-            const teksMasuk = messageData.text?.body; // Isi chat Anda
+            const nomorPengirim = messageData.from;
+            const teksMasuk = messageData.text?.body;
 
-            console.log(`-> Menemukan Chat Masuk dari ${nomorPengirim}: "${teksMasuk}"`);
+            console.log(`-> Chat masuk dari ${nomorPengirim}: "${teksMasuk}"`);
 
             if (!teksMasuk) {
-                console.log("-> Chat masuk bukan bertipe teks. Diabaikan.");
+                console.log("-> Bukan tipe teks. Diabaikan.");
                 return res.status(200).json({ status: 'Bukan teks' });
             }
 
-            // KONFIGURASI KUNCI UTAMA (Membaca dari Environment Variables Vercel)
             const metaAccessToken = process.env.META_ACCESS_TOKEN;
-            const metaPhoneNumberId = "1187789877749779"; 
+            const metaPhoneNumberId = "1187789877749779";
             const groqApiKey = process.env.GROQ_API_KEY;
 
+            const historyKey = `chat_history:${nomorPengirim}`;
+
             try {
+                // A. RESET CHAT KALAU USER KETIK "reset"
+                if (teksMasuk.trim().toLowerCase() === 'reset') {
+                    await kv.del(historyKey);
+                    await fetch(`https://graph.facebook.com/v25.0/${metaPhoneNumberId}/messages`, {
+                        method: "POST",
+                        headers: {
+                            "Authorization": "Bearer " + metaAccessToken,
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            messaging_product: "whatsapp",
+                            recipient_type: "individual",
+                            to: nomorPengirim,
+                            type: "text",
+                            text: { body: "Oke, percakapan sudah direset. Mulai obrolan baru ya!" }
+                        })
+                    });
+                    return res.status(200).json({ status: 'Chat direset' });
+                }
+
+                // B. AMBIL HISTORY CHAT SEBELUMNYA
+                let history = await kv.get(historyKey) || [];
+                console.log(`-> History ditemukan: ${history.length} pesan`);
+
+                // C. TAMBAHKAN PESAN BARU DARI USER
+                history.push({ role: "user", content: teksMasuk });
+
+                if (history.length > 10) {
+                    history = history.slice(-10);
+                }
+
+                // D. TANYA KE GROQ AI DENGAN SELURUH HISTORY
                 console.log("-> Menghubungi Groq AI...");
-                // A. TANYA KE GROQ AI
                 const groqResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
                     method: "POST",
                     headers: {
@@ -59,18 +89,27 @@ export default async function handler(req, res) {
                     body: JSON.stringify({
                         model: "llama-3.1-8b-instant",
                         messages: [
-                            { role: "system", content: "Kamu adalah Aurora AI Agent. Jawablah pesan customer dengan ramah, singkat, dan solutif." },
-                            { role: "user", content: teksMasuk }
+                            { role: "system", content: "Kamu adalah Aurora AI Agent. Jawablah pesan customer dengan ramah, singkat, dan solutif. Ingat konteks percakapan sebelumnya." },
+                            ...history
                         ]
                     })
                 });
 
                 const groqData = await groqResponse.json();
+
+                if (!groqResponse.ok) {
+                    console.error("❌ Groq error:", JSON.stringify(groqData));
+                }
+
                 const jawabanAI = groqData.choices?.[0]?.message?.content || "Maaf, Aurora AI sedang mengalami gangguan teknis.";
                 console.log("-> Jawaban Groq AI:", jawabanAI);
 
-                console.log("-> Mengirim balasan kembali ke WhatsApp Anda...");
-                // B. BALAS CHAT KE WHATSAPP PENGIRIM
+                // E. TAMBAHKAN JAWABAN AI KE HISTORY, LALU SIMPAN LAGI
+                history.push({ role: "assistant", content: jawabanAI });
+                await kv.set(historyKey, history);
+
+                // F. BALAS CHAT KE WHATSAPP
+                console.log("-> Mengirim balasan ke WhatsApp...");
                 const sendWaResponse = await fetch(`https://graph.facebook.com/v25.0/${metaPhoneNumberId}/messages`, {
                     method: "POST",
                     headers: {
@@ -88,6 +127,11 @@ export default async function handler(req, res) {
 
                 const sendWaData = await sendWaResponse.json();
                 console.log("-> Status Kirim Balasan WhatsApp:", JSON.stringify(sendWaData));
+
+                if (!sendWaResponse.ok) {
+                    console.error("❌ Kirim WA gagal:", JSON.stringify(sendWaData));
+                    return res.status(200).json({ status: 'Gagal kirim WA', detail: sendWaData });
+                }
 
                 return res.status(200).json({ status: 'Sukses' });
 
