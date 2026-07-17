@@ -9,7 +9,7 @@ export default async function handler(req, res) {
 
             try {
                 // Server Vercel menembak URL Endpoint resmi Api.co.id
-                const response = await fetch("https://crm.api.co.id/api/v1/public/messages/send", { 
+                const response = await fetch("https://chat.api.co.id/api/v1/public/messages/send", { 
                     method: "POST",
                     headers: {
                         "Authorization": "Bearer " + apiKey,
