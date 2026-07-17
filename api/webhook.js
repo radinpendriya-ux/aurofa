@@ -1,76 +1,93 @@
 export default async function handler(req, res) {
     // ------------------------------------------------------------------------
-    // 1. PROSES VERIFIKASI WEBHOOK DARI META (Permintaan GET)
+    // 1. VERIFIKASI WEBHOOK DARI META (Permintaan GET)
     // ------------------------------------------------------------------------
     if (req.method === 'GET') {
-        // Ambil data parameter verifikasi yang dikirim otomatis oleh Meta
         const mode = req.query['hub.mode'];
         const token = req.query['hub.verify_token'];
         const challenge = req.query['hub.challenge'];
-
-        // Ganti "MY_VERIFY_TOKEN_AUROFA" dengan kata sandi bebas buatan Anda sendiri
         const VERIFY_TOKEN = "MY_VERIFY_TOKEN_AUROFA";
 
-        // Jika Meta mengirimkan mode subscribe dan tokennya cocok
-        if (mode && token) {
-            if (mode === 'subscribe' && token === VERIFY_TOKEN) {
-                console.log('Webhook Aurofa Sukses Terverifikasi oleh Meta!');
-                // WAJIB mengembalikan nilai challenge dalam bentuk teks biasa
-                return res.status(200).send(challenge);
-            } else {
-                // Jika token tidak cocok
-                return res.status(403).send('Forbidden: Token verifikasi salah.');
-            }
+        if (mode && token && mode === 'subscribe' && token === VERIFY_TOKEN) {
+            return res.status(200).send(challenge);
         }
-        
-        return res.status(200).send('Jalur Backend Cloud API Meta Aktif & Siap Diverifikasi!');
+        return res.status(200).send('Jalur Webhook Aktif!');
     }
 
     // ------------------------------------------------------------------------
-    // 2. PROSES PENGIRIMAN & PENERIMAAN PESAN (Permintaan POST)
+    // 2. PROSES TERIMA CHAT & BALAS PAKAI GROQ AI (Permintaan POST)
     // ------------------------------------------------------------------------
     if (req.method === 'POST') {
         const body = req.body;
 
-        // Pemicu dari tombol di website Anda (index.html)
-        if (body && body.aksi === 'kirim_wa') {
-            const phoneNumberId = "1187789877749779"; 
-            const accessToken = "EAAOJEEVipQ0BR13mGsZBmLRDQPufk5CEZAdaI11MnwoYyZA7ZBrQRu5coJsN8e33XbcW8DtIZCz8de0JenYUyBiAVLqcQLkZCgoerZBKzQe59YclnEWZAsRgvC9ObBAOiXGODoCVcG7Q3YYUoiVSIsjh2xNUZA1C6oyZAwn8ivS81ODZC0hcKZBMe0U9KKox16ZBrUwZDZD";
-            const nomorTujuan = "6285650956877"; 
+        // Cek apakah ada data pesan masuk resmi dari WhatsApp Meta
+        if (body.object === 'whatsapp_business_account' && body.entry?.[0]?.changes?.[0]?.value?.messages?.[0]) {
+            
+            // ==================== KONFIGURASI KUNCI UTAMA ====================
+            const metaAccessToken = process.env.META_ACCESS_TOKEN;
+            const metaPhoneNumberId = "1187789877749779"; // ID Nomor Anda yang tadi
+            const groqApiKey = process.env.GROQ_API_KEY; //
+            // =================================================================
+
+            const messageData = body.entry[0].changes[0].value.messages[0];
+            const nomorPengirim = messageData.from; // Nomor WA Anda yang nge-chat
+            const teksMasuk = messageData.text?.body; // Isi chat Anda
+
+            // Jika yang masuk bukan pesan teks (misal gambar/stiker), abaikan agar tidak error
+            if (!teksMasuk) {
+                return res.status(200).json({ status: 'Bukan pesan teks' });
+            }
 
             try {
-                const response = await fetch(`https://graph.facebook.com/v20.0/${phoneNumberId}/messages`, {
+                // A. OPER CHAT KE GROQ AI
+                const groqResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
                     method: "POST",
                     headers: {
-                        "Authorization": "Bearer " + accessToken,
+                        "Authorization": "Bearer " + groqApiKey,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        model: "llama3-8b-8192", // Model AI super cepat milik Groq
+                        messages: [
+                            { role: "system", content: "Kamu adalah Aurora AI Agent. Jawablah pesan customer dengan ramah, singkat, dan solutif." },
+                            { role: "user", content: teksMasuk }
+                        ]
+                    })
+                });
+
+                const groqData = await groqResponse.json();
+                const jawabanAI = groqData.choices?.[0]?.message?.content || "Maaf, Aurora AI sedang mengalami gangguan teknis.";
+
+                // B. KIRIM BALASAN JAWABAN AI BALIK KE WHATSAPP ANDA
+                await fetch(`https://graph.facebook.com/v25.0/${metaPhoneNumberId}/messages`, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": "Bearer " + metaAccessToken,
                         "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
                         messaging_product: "whatsapp",
-                        to: nomorTujuan,
-                        type: "template",
-                        template: {
-                            name: "hello_world",
-                            language: { code: "en_US" }
-                        }
+                        recipient_type: "individual",
+                        to: nomorPengirim,
+                        type: "text",
+                        text: { body: jawabanAI }
                     })
                 });
 
-                const dataHasil = await response.json();
+                return res.status(200).json({ status: 'Sukses direspon oleh Groq AI' });
 
-                if (response.ok) {
-                    return res.status(200).json({ status: "Pesan Cloud API Meta berhasil dikirim!" });
-                } else {
-                    return res.status(500).json({ status: "Gagal dikirim oleh Meta: " + JSON.stringify(dataHasil.error) });
-                }
             } catch (err) {
-                return res.status(500).json({ status: "Error sistem backend: " + err.message });
+                console.error("Gagal memproses AI:", err.message);
+                return res.status(500).json({ error: err.message });
             }
         }
 
-        // Tempat masuk log ketika ada orang chat ke WA Anda (Webhook POST resmi dari Meta)
-        console.log("Ada pesan WA masuk dari Meta:", JSON.stringify(body, null, 2));
-        return res.status(200).json({ status: 'EVENT_RECEIVED' });
+        // Ini logika tombol kirim manual website Anda agar tetap berfungsi jika diklik
+        if (body && body.aksi === 'kirim_wa') {
+            return res.status(200).json({ status: "Fitur tombol manual aktif" });
+        }
+
+        return res.status(200).json({ status: 'Event diabaikan' });
     }
 
     return res.status(405).send('Method Not Allowed');
