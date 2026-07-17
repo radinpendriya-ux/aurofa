@@ -34,7 +34,7 @@ export default async function handler(req, res) {
 
         // Pemicu dari tombol di website Anda (index.html)
         if (body && body.aksi === 'kirim_wa') {
-            const phoneNumberId = "1742578667091039"; 
+            const phoneNumberId = "1187789877749779"; 
             const accessToken = "EAAOJEEVipQ0BR13mGsZBmLRDQPufk5CEZAdaI11MnwoYyZA7ZBrQRu5coJsN8e33XbcW8DtIZCz8de0JenYUyBiAVLqcQLkZCgoerZBKzQe59YclnEWZAsRgvC9ObBAOiXGODoCVcG7Q3YYUoiVSIsjh2xNUZA1C6oyZAwn8ivS81ODZC0hcKZBMe0U9KKox16ZBrUwZDZD";
             const nomorTujuan = "6285650956877"; 
 
