@@ -1,170 +1,150 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aurofa | Portofolio Pribadi</title>
-    <link rel="icon" type="image/png" sizes="48x48" href="/favicon.png">
-<link rel="shortcut icon" href="/favicon.png">
-<link rel="apple-touch-icon" href="/favicon.png">
-    <style>
-        /* Mengatur dasar halaman web */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8fafc;
-            color: #334155;
-            line-height: 1.6;
-            padding: 20px;
-        }
+import { kv } from '@vercel/kv';
 
-        /* Container utama agar konten berada di tengah */
-        .container {
-            max-width: 600px;
-            margin: 50px auto;
-            background: #ffffff;
-            padding: 40px;
-            border-radius: 16px;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
-            text-align: center;
+export default async function handler(req, res) {
+    // 1. VERIFIKASI WEBHOOK DARI META (Permintaan GET)
+    if (req.method === 'GET') {
+        const mode = req.query['hub.mode'];
+        const token = req.query['hub.verify_token'];
+        const challenge = req.query['hub.challenge'];
+        const VERIFY_TOKEN = "MY_VERIFY_TOKEN_AUROFA";
+
+        if (mode && token && mode === 'subscribe' && token === VERIFY_TOKEN) {
+            return res.status(200).send(challenge);
         }
-
-        /* Desain foto profil lingkaran */
-        .avatar {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            background-color: #cbd5e1;
-            margin: 0 auto 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 40px;
-            color: #64748b;
-            border: 4px solid #f1f5f9;
-        }
-
-        /* Tipografi / Tulisan */
-        h1 {
-            font-size: 28px;
-            color: #1e293b;
-            margin-bottom: 8px;
-        }
-        .tagline {
-            font-size: 16px;
-            color: #6366f1;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 20px;
-        }
-        .bio {
-            font-size: 16px;
-            color: #475569;
-            margin-bottom: 30px;
-        }
-
-        /* Bagian tombol link/sosial media */
-        .links-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #94a3b8;
-            text-transform: uppercase;
-            margin-bottom: 15px;
-            text-align: left;
-            border-bottom: 1px solid #e2e8f0;
-            padding-bottom: 5px;
-        }
-        .link-card {
-            display: block;
-            background: #f1f5f9;
-            color: #1e293b;
-            text-decoration: none;
-            padding: 14px;
-            margin-bottom: 12px;
-            border-radius: 8px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-        }
-        /* Efek ketika tombol disorot kursor */
-        .link-card:hover {
-            background: #6366f1;
-            color: #ffffff;
-            transform: translateY(-2px);
-        }
-
-        /* Bagian kaki halaman (footer) */
-        footer {
-            margin-top: 40px;
-            font-size: 13px;
-            color: #94a3b8;
-        }
-    </style>
-</head>
-<body>
-
-    <div class="container">
-        <!-- Foto Profil (Sementara menggunakan emoji, bisa Anda ganti nanti) -->
-        <div class="avatar">🚀</div>
-
-        <!-- Nama Anda -->
-        <h1>Aurofa</h1>
-        
-        <!-- Pekerjaan / Status Belajar -->
-        <div class="tagline">Pembelajar Coding Pemula</div>
-        
-        <!-- Kalimat perkenalan singkat -->
-        <p class="bio">
-            Halo! Selamat datang di website pribadi saya. Halaman ini dibuat menggunakan kolaborasi antara <strong>GitHub</strong> untuk menyimpan kode dan <strong>Vercel</strong> sebagai hostingnya. Saat ini saya sedang menantang diri sendiri untuk belajar pemrograman web dari nol.
-        </p>
-
-        <!-- Judul Sosial Media -->
-        <div class="links-title">Hubungi Saya</div>
-
-       <!-- 1. INI TOMBOLNYA (Taruh di bawah tulisan Hubungi Saya) -->
-<button onclick="kirimPesanWA()" class="link-card" style="width: 100%; border: none; cursor: pointer; text-align: center; background-color: #25D366; color: white;">
-    🚀 Tes Kirim WA Otomatis
-</button>
-
-<!-- 2. INI RUMAH KODENYA -->
-<script>
-async function kirimPesanWA() {
-    try {
-        // Website Anda memanggil fungsi backend-nya sendiri di Vercel
-        const response = await fetch("/api/webhook", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                aksi: "kirim_wa" // memberi tahu backend untuk mengirim WA
-            })
-        });
-
-        const hasil = await response.json();
-        alert(hasil.status);
-    } catch (error) {
-        alert("Terjadi error koneksi ke server Aurofa.");
-        console.error(error);
+        return res.status(200).send('Jalur Webhook Aktif!');
     }
+
+    // 2. PROSES TERIMA DATA DARI META (Permintaan POST)
+    if (req.method === 'POST') {
+        const body = req.body;
+
+        console.log("=== DATA MASUK DARI META ===");
+        console.log(JSON.stringify(body, null, 2));
+
+        const changeValue = body?.entry?.[0]?.changes?.[0]?.value;
+
+        if (changeValue && changeValue.statuses) {
+            console.log("-> Update status pengiriman. Diabaikan.");
+            return res.status(200).json({ status: 'Status update diabaikan' });
+        }
+
+        if (changeValue && changeValue.messages?.[0]) {
+            const messageData = changeValue.messages[0];
+            const nomorPengirim = messageData.from;
+            const teksMasuk = messageData.text?.body;
+
+            console.log(`-> Chat masuk dari ${nomorPengirim}: "${teksMasuk}"`);
+
+            if (!teksMasuk) {
+                console.log("-> Bukan tipe teks. Diabaikan.");
+                return res.status(200).json({ status: 'Bukan teks' });
+            }
+
+            const metaAccessToken = process.env.META_ACCESS_TOKEN;
+            const metaPhoneNumberId = "1187789877749779";
+            const groqApiKey = process.env.GROQ_API_KEY;
+
+            // Key unik untuk simpan history percakapan per nomor pengirim
+            const historyKey = `chat_history:${nomorPengirim}`;
+
+            try {
+                // A. RESET CHAT KALAU USER KETIK "reset"
+                if (teksMasuk.trim().toLowerCase() === 'reset') {
+                    await kv.del(historyKey);
+                    await fetch(`https://graph.facebook.com/v25.0/${metaPhoneNumberId}/messages`, {
+                        method: "POST",
+                        headers: {
+                            "Authorization": "Bearer " + metaAccessToken,
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            messaging_product: "whatsapp",
+                            recipient_type: "individual",
+                            to: nomorPengirim,
+                            type: "text",
+                            text: { body: "Oke, percakapan sudah direset. Mulai obrolan baru ya!" }
+                        })
+                    });
+                    return res.status(200).json({ status: 'Chat direset' });
+                }
+
+                // B. AMBIL HISTORY CHAT SEBELUMNYA
+                let history = await kv.get(historyKey) || [];
+                console.log(`-> History ditemukan: ${history.length} pesan`);
+
+                // C. TAMBAHKAN PESAN BARU DARI USER
+                history.push({ role: "user", content: teksMasuk });
+
+                // Batasi maksimal 10 pesan terakhir biar tidak kelebihan token
+                if (history.length > 10) {
+                    history = history.slice(-10);
+                }
+
+                // D. TANYA KE GROQ AI DENGAN SELURUH HISTORY
+                console.log("-> Menghubungi Groq AI...");
+                const groqResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": "Bearer " + groqApiKey,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        model: "llama-3.1-8b-instant",
+                        messages: [
+                            { role: "system", content: "Kamu adalah Aurora AI Agent. Jawablah pesan customer dengan ramah, singkat, dan solutif. Ingat konteks percakapan sebelumnya." },
+                            ...history
+                        ]
+                    })
+                });
+
+                const groqData = await groqResponse.json();
+
+                if (!groqResponse.ok) {
+                    console.error("❌ Groq error:", JSON.stringify(groqData));
+                }
+
+                const jawabanAI = groqData.choices?.[0]?.message?.content || "Maaf, Aurora AI sedang mengalami gangguan teknis.";
+                console.log("-> Jawaban Groq AI:", jawabanAI);
+
+                // E. TAMBAHKAN JAWABAN AI KE HISTORY, LALU SIMPAN LAGI
+                history.push({ role: "assistant", content: jawabanAI });
+                await kv.set(historyKey, history);
+
+                // F. BALAS CHAT KE WHATSAPP
+                console.log("-> Mengirim balasan ke WhatsApp...");
+                const sendWaResponse = await fetch(`https://graph.facebook.com/v25.0/${metaPhoneNumberId}/messages`, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": "Bearer " + metaAccessToken,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        messaging_product: "whatsapp",
+                        recipient_type: "individual",
+                        to: nomorPengirim,
+                        type: "text",
+                        text: { body: jawabanAI }
+                    })
+                });
+
+                const sendWaData = await sendWaResponse.json();
+                console.log("-> Status Kirim Balasan WhatsApp:", JSON.stringify(sendWaData));
+
+                if (!sendWaResponse.ok) {
+                    console.error("❌ Kirim WA gagal:", JSON.stringify(sendWaData));
+                    return res.status(200).json({ status: 'Gagal kirim WA', detail: sendWaData });
+                }
+
+                return res.status(200).json({ status: 'Sukses' });
+
+            } catch (err) {
+                console.error("❌ ERROR PROSES:", err.message);
+                return res.status(500).json({ error: err.message });
+            }
+        }
+
+        return res.status(200).json({ status: 'Format data tidak dikenal/tidak diproses' });
+    }
+
+    return res.status(405).send('Method Not Allowed');
 }
-</script>
-
-        <!-- Daftar Tombol Link (Ganti tanda # dengan link asli Anda nanti) -->
-        <a href="https://www.instagram.com/radin_pendriya/" class="link-card" target="_blank">📸 Instagram</a>
-        <a href="https://www.linkedin.com/in/radin-pendriya-738176267/" class="link-card" target="_blank">💼 LinkedIn</a>
-        <a href="https://github.com/radinpendriya-ux" class="link-card" target="_blank">💻 GitHub Profil</a>
-        <a href="mailto:radinpendriya@gmail.com" class="link-card">✉️ Kirim Email</a>
-
-        <!-- Footer -->
-        <footer>
-            &copy; 2026 aurofa.com. Didukung oleh Vercel.
-        </footer>
-    </div>
-
-</body>
-</html>
