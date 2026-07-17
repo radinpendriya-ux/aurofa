@@ -2,17 +2,26 @@ import { kv } from '@vercel/kv';
 
 // Helper: dapatkan access token baru dari refresh token
 async function getGoogleAccessToken() {
+    const params = new URLSearchParams();
+    params.append('client_id', process.env.GOOGLE_CLIENT_ID);
+    params.append('client_secret', process.env.GOOGLE_CLIENT_SECRET);
+    params.append('refresh_token', process.env.GOOGLE_REFRESH_TOKEN);
+    params.append('grant_type', 'refresh_token');
+
     const response = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-            client_id: process.env.GOOGLE_CLIENT_ID,
-            client_secret: process.env.GOOGLE_CLIENT_SECRET,
-            refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
-            grant_type: 'refresh_token'
-        })
+        body: params.toString() // Wajib diubah ke string (.toString())
     });
+    
     const data = await response.json();
+    
+    // Log ini untuk debugging jika proses refresh token-nya yang gagal
+    if (!response.ok) {
+        console.error("❌ Gagal mendapatkan Access Token:", JSON.stringify(data));
+        return null;
+    }
+
     return data.access_token;
 }
 
