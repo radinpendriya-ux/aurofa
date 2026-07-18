@@ -13,9 +13,9 @@ async function getGoogleAccessToken() {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: params.toString() // Wajib diubah ke string (.toString())
     });
-    
+
     const data = await response.json();
-    
+
     // Log ini untuk debugging jika proses refresh token-nya yang gagal
     if (!response.ok) {
         console.error("❌ Gagal mendapatkan Access Token:", JSON.stringify(data));
@@ -25,13 +25,17 @@ async function getGoogleAccessToken() {
     return data.access_token;
 }
 
-// Helper: buat event di Google Calendar
-async function buatEventCalendar({ judul, tanggal, jam_mulai, jam_selesai }) {
+// Helper: buat event di Google Calendar (sudah bisa undang peserta)
+async function buatEventCalendar({ judul, tanggal, jam_mulai, jam_selesai, attendees }) {
     const accessToken = await getGoogleAccessToken();
     const calendarId = process.env.GOOGLE_CALENDAR_ID;
 
+    // Ubah daftar email jadi format yang diminta Google: [{ email: "..." }, ...]
+    const attendeesList = (attendees || []).map(email => ({ email }));
+
+    // sendUpdates=all -> supaya Google otomatis kirim email undangan ke peserta
     const response = await fetch(
-        `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`,
+        `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?sendUpdates=all`,
         {
             method: 'POST',
             headers: {
@@ -41,7 +45,8 @@ async function buatEventCalendar({ judul, tanggal, jam_mulai, jam_selesai }) {
             body: JSON.stringify({
                 summary: judul,
                 start: { dateTime: `${tanggal}T${jam_mulai}:00`, timeZone: 'Asia/Jakarta' },
-                end: { dateTime: `${tanggal}T${jam_selesai}:00`, timeZone: 'Asia/Jakarta' }
+                end: { dateTime: `${tanggal}T${jam_selesai}:00`, timeZone: 'Asia/Jakarta' },
+                attendees: attendeesList
             })
         }
     );
@@ -102,14 +107,19 @@ export default async function handler(req, res) {
                     type: "function",
                     function: {
                         name: "buat_jadwal_calendar",
-                        description: "Membuat/menjadwalkan event baru di Google Calendar user",
+                        description: "Membuat/menjadwalkan event baru di Google Calendar user, bisa juga mengundang peserta lain lewat email",
                         parameters: {
                             type: "object",
                             properties: {
                                 judul: { type: "string", description: "Judul atau nama acara/meeting" },
                                 tanggal: { type: "string", description: "Tanggal acara, format YYYY-MM-DD" },
                                 jam_mulai: { type: "string", description: "Jam mulai, format HH:MM 24 jam" },
-                                jam_selesai: { type: "string", description: "Jam selesai, format HH:MM 24 jam" }
+                                jam_selesai: { type: "string", description: "Jam selesai, format HH:MM 24 jam" },
+                                attendees: {
+                                    type: "array",
+                                    items: { type: "string" },
+                                    description: "Daftar alamat email peserta yang diundang ke acara ini, kalau ada disebutkan dalam pesan user"
+                                }
                             },
                             required: ["judul", "tanggal", "jam_mulai", "jam_selesai"]
                         }
@@ -127,7 +137,7 @@ export default async function handler(req, res) {
                         messages: [
                             {
                                 role: "system",
-                                content: `Kamu adalah Aurora AI Agent. Jawab pesan dengan ramah dan singkat. Hari ini tanggal ${hariIni} (zona waktu Asia/Jakarta). Kalau user minta dibuatkan jadwal/meeting/acara, gunakan function buat_jadwal_calendar dengan tanggal absolut (hitung sendiri kalau user bilang "besok"/"lusa"/dll berdasarkan tanggal hari ini).`
+                                content: `Kamu adalah Aurora AI Agent. Jawab pesan dengan ramah dan singkat. Hari ini tanggal ${hariIni} (zona waktu Asia/Jakarta). Kalau user minta dibuatkan jadwal/meeting/acara, gunakan function buat_jadwal_calendar dengan tanggal absolut (hitung sendiri kalau user bilang "besok"/"lusa"/dll berdasarkan tanggal hari ini). Kalau user menyebutkan email orang lain untuk diundang, masukkan ke parameter attendees.`
                             },
                             ...history
                         ],
@@ -151,7 +161,11 @@ export default async function handler(req, res) {
                     const hasilCalendar = await buatEventCalendar(args);
 
                     if (hasilCalendar.id) {
-                        balasanFinal = `✅ Jadwal berhasil dibuat!\n\n📌 ${args.judul}\n📅 ${args.tanggal}\n⏰ ${args.jam_mulai} - ${args.jam_selesai} WIB`;
+                        const daftarPeserta = (args.attendees && args.attendees.length > 0)
+                            ? `\n👥 Mengundang: ${args.attendees.join(', ')}`
+                            : '';
+
+                        balasanFinal = `✅ Jadwal berhasil dibuat!\n\n📌 ${args.judul}\n📅 ${args.tanggal}\n⏰ ${args.jam_mulai} - ${args.jam_selesai} WIB${daftarPeserta}`;
                     } else {
                         console.error("❌ Gagal buat event:", JSON.stringify(hasilCalendar));
                         balasanFinal = "Maaf, gagal membuat jadwal di Calendar. Coba lagi ya.";
