@@ -240,6 +240,32 @@ async function panggilGemini(systemPrompt, history, model) {
     return { toolCallArgs: null, textReply: textPart?.text || null };
 }
 
+// ================== PEMANGGIL AI: DEEPSEEK ==================
+
+async function panggilDeepSeek(systemPrompt, history, model) {
+    const deepseekApiKey = process.env.DEEPSEEK_API_KEY;
+    const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+            "Authorization": "Bearer " + deepseekApiKey,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            model: model,
+            messages: [{ role: "system", content: systemPrompt }, ...history],
+            tools: toolsGroq, // DeepSeek mendukung skema tool call standar OpenAI
+            tool_choice: "auto"
+        })
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+        console.error("❌ DeepSeek error:", JSON.stringify(data));
+        return { toolCallArgs: null, textReply: null };
+    }
+    return parsingResponseOpenAI(data);
+}
+
 // ================== HANDLER UTAMA ==================
 
 export default async function handler(req, res) {
