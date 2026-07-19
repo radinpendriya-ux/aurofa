@@ -334,8 +334,10 @@ export default async function handler(req, res) {
                     hasilAI = await panggilMistral(systemPromptLengkap, history, aiConfig.model);
                 } else if (aiConfig.provider === 'cerebras') {
                     hasilAI = await panggilCerebras(systemPromptLengkap, history, aiConfig.model);
+                } else if (aiConfig.provider === 'deepseek') {
+                    hasilAI = await panggilDeepSeek(systemPromptLengkap, history, aiConfig.model);
                 } else {
-                    // Default fallback jika kebetulan bernilai groq
+                    // Default fallback jika bernilai groq
                     hasilAI = await panggilGroq(systemPromptLengkap, history, aiConfig.model);
                 }
 
