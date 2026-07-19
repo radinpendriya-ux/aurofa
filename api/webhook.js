@@ -107,12 +107,14 @@ function parsingResponseOpenAI(data) {
         }
     }
 
-    if (pesan?.content && pesan.content.includes('buat_jadwal_calendar')) {
+    if (pesan?.content && (pesan.content.includes('buat_jadwal_calendar') || pesan.content.includes('judul'))) {
         const jsonMatch = pesan.content.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
             try {
                 const args = JSON.parse(jsonMatch[0]);
-                return { toolCallArgs: args, textReply: null };
+                if (args.judul && args.tanggal && args.jam_mulai) {
+                    return { toolCallArgs: args, textReply: null };
+                }
             } catch (e) { }
         }
     }
@@ -159,7 +161,7 @@ async function panggilMistral(systemPrompt, history, model) {
         body: JSON.stringify({
             model: model,
             messages: [{ role: "system", content: systemPrompt }, ...history],
-            tools: toolsGroq, // Mistral menggunakan format terstandardisasi yang sama
+            tools: toolsGroq,
             tool_choice: "auto"
         })
     });
@@ -172,22 +174,33 @@ async function panggilMistral(systemPrompt, history, model) {
     return parsingResponseOpenAI(data);
 }
 
-// ================== PEMANGGIL AI: CEREBRAS ==================
+// ================== PEMANGGIL AI: CEREBRAS (FIXED) ==================
 
 async function panggilCerebras(systemPrompt, history, model) {
     const cerebrasApiKey = process.env.CEREBRAS_API_KEY;
+    
+    // Modifikasi request body agar kompatibel penuh dengan Gemma 4 & GPT-OSS di Cerebras
+    const requestBody = {
+        model: model,
+        messages: [{ role: "system", content: systemPrompt }, ...history]
+    };
+
+    // Tambahkan tools hanya jika mendeteksi teks berkaitan dengan pembuatan jadwal kalender
+    const userMessage Terakhir = history[history.length - 1]?.content || "";
+    const butuhKalendar = /jadwal|kalender|meeting|acara|agenda|jam|tanggal/i.test(userMessageTerakhir);
+    
+    if (butuhKalendar) {
+        requestBody.tools = toolsGroq;
+        requestBody.tool_choice = "auto";
+    }
+
     const response = await fetch("https://api.cerebras.ai/v1/chat/completions", {
         method: "POST",
         headers: {
             "Authorization": "Bearer " + cerebrasApiKey,
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-            model: model,
-            messages: [{ role: "system", content: systemPrompt }, ...history],
-            tools: toolsGroq, // Cerebras juga memakai format OpenAI
-            tool_choice: "auto"
-        })
+        body: JSON.stringify(requestBody)
     });
 
     const data = await response.json();
@@ -253,7 +266,7 @@ async function panggilDeepSeek(systemPrompt, history, model) {
         body: JSON.stringify({
             model: model,
             messages: [{ role: "system", content: systemPrompt }, ...history],
-            tools: toolsGroq, // DeepSeek mendukung skema tool call standar OpenAI
+            tools: toolsGroq,
             tool_choice: "auto"
         })
     });
@@ -337,7 +350,6 @@ export default async function handler(req, res) {
                 } else if (aiConfig.provider === 'deepseek') {
                     hasilAI = await panggilDeepSeek(systemPromptLengkap, history, aiConfig.model);
                 } else {
-                    // Default fallback jika bernilai groq
                     hasilAI = await panggilGroq(systemPromptLengkap, history, aiConfig.model);
                 }
 
