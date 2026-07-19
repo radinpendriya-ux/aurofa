@@ -49,7 +49,7 @@ async function buatEventCalendar({ judul, tanggal, jam_mulai, jam_selesai, atten
 
 // ================== SCHEMA FUNCTION UNTUK MASING-MASING PROVIDER ==================
 
-// Format schema untuk Groq (gaya OpenAI)
+// Format schema untuk Groq, Mistral, dan Cerebras (Gaya OpenAI Standard)
 const toolsGroq = [{
     type: "function",
     function: {
@@ -94,11 +94,36 @@ const toolsGemini = [{
     }
 }];
 
+// Helper internal untuk memproses hasil response dari API berbasis OpenAI (Groq, Mistral, Cerebras)
+function parsingResponseOpenAI(data) {
+    const pesan = data.choices?.[0]?.message;
+
+    if (pesan?.tool_calls?.[0]) {
+        try {
+            const args = JSON.parse(pesan.tool_calls[0].function.arguments);
+            return { toolCallArgs: args, textReply: null };
+        } catch (e) {
+            console.error("❌ Gagal parse tool_calls:", e.message);
+        }
+    }
+
+    if (pesan?.content && pesan.content.includes('buat_jadwal_calendar')) {
+        const jsonMatch = pesan.content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+            try {
+                const args = JSON.parse(jsonMatch[0]);
+                return { toolCallArgs: args, textReply: null };
+            } catch (e) { }
+        }
+    }
+
+    return { toolCallArgs: null, textReply: pesan?.content || null };
+}
+
 // ================== PEMANGGIL AI: GROQ ==================
 
 async function panggilGroq(systemPrompt, history, model) {
     const groqApiKey = process.env.GROQ_API_KEY;
-
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -118,38 +143,65 @@ async function panggilGroq(systemPrompt, history, model) {
         console.error("❌ Groq error:", JSON.stringify(data));
         return { toolCallArgs: null, textReply: null };
     }
+    return parsingResponseOpenAI(data);
+}
 
-    const pesan = data.choices?.[0]?.message;
+// ================== PEMANGGIL AI: MISTRAL AI ==================
 
-    if (pesan?.tool_calls?.[0]) {
-        try {
-            const args = JSON.parse(pesan.tool_calls[0].function.arguments);
-            return { toolCallArgs: args, textReply: null };
-        } catch (e) {
-            console.error("❌ Gagal parse tool_calls Groq:", e.message);
-        }
+async function panggilMistral(systemPrompt, history, model) {
+    const mistralApiKey = process.env.MISTRAL_API_KEY;
+    const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+            "Authorization": "Bearer " + mistralApiKey,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            model: model,
+            messages: [{ role: "system", content: systemPrompt }, ...history],
+            tools: toolsGroq, // Mistral menggunakan format terstandardisasi yang sama
+            tool_choice: "auto"
+        })
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+        console.error("❌ Mistral error:", JSON.stringify(data));
+        return { toolCallArgs: null, textReply: null };
     }
+    return parsingResponseOpenAI(data);
+}
 
-    // Fallback: kadang model kecil menulis function call sebagai teks biasa
-    if (pesan?.content && pesan.content.includes('buat_jadwal_calendar')) {
-        const jsonMatch = pesan.content.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-            try {
-                const args = JSON.parse(jsonMatch[0]);
-                return { toolCallArgs: args, textReply: null };
-            } catch (e) { /* biarkan jatuh ke text reply di bawah */ }
-        }
+// ================== PEMANGGIL AI: CEREBRAS ==================
+
+async function panggilCerebras(systemPrompt, history, model) {
+    const cerebrasApiKey = process.env.CEREBRAS_API_KEY;
+    const response = await fetch("https://api.cerebras.ai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+            "Authorization": "Bearer " + cerebrasApiKey,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            model: model,
+            messages: [{ role: "system", content: systemPrompt }, ...history],
+            tools: toolsGroq, // Cerebras juga memakai format OpenAI
+            tool_choice: "auto"
+        })
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+        console.error("❌ Cerebras error:", JSON.stringify(data));
+        return { toolCallArgs: null, textReply: null };
     }
-
-    return { toolCallArgs: null, textReply: pesan?.content || null };
+    return parsingResponseOpenAI(data);
 }
 
 // ================== PEMANGGIL AI: GEMINI ==================
 
 async function panggilGemini(systemPrompt, history, model) {
     const geminiApiKey = process.env.GEMINI_API_KEY;
-
-    // Ubah history dari format Groq/OpenAI (role: user/assistant) ke format Gemini (role: user/model)
     const contents = history.map(h => ({
         role: h.role === 'assistant' ? 'model' : 'user',
         parts: [{ text: h.content }]
@@ -252,7 +304,12 @@ export default async function handler(req, res) {
                 let hasilAI;
                 if (aiConfig.provider === 'gemini') {
                     hasilAI = await panggilGemini(systemPromptLengkap, history, aiConfig.model);
+                } else if (aiConfig.provider === 'mistral') {
+                    hasilAI = await panggilMistral(systemPromptLengkap, history, aiConfig.model);
+                } else if (aiConfig.provider === 'cerebras') {
+                    hasilAI = await panggilCerebras(systemPromptLengkap, history, aiConfig.model);
                 } else {
+                    // Default fallback jika kebetulan bernilai groq
                     hasilAI = await panggilGroq(systemPromptLengkap, history, aiConfig.model);
                 }
 
