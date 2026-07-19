@@ -126,6 +126,13 @@ export default async function handler(req, res) {
                     }
                 }];
 
+                // System prompt sekarang diambil dari Environment Variable AI_SYSTEM_PROMPT.
+                // Kalau env var belum diset, pakai fallback default supaya tetap jalan.
+                const systemPromptDasar = process.env.AI_SYSTEM_PROMPT ||
+                    "Kamu adalah Aurora AI Agent. Jawab pesan dengan ramah dan singkat.";
+
+                const systemPromptLengkap = `${systemPromptDasar}\n\nHari ini tanggal ${hariIni} (zona waktu Asia/Jakarta).`;
+
                 const groqResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
                     method: "POST",
                     headers: {
@@ -135,14 +142,7 @@ export default async function handler(req, res) {
                     body: JSON.stringify({
                         model: "llama-3.1-8b-instant",
                         messages: [
-                            {
-                                role: "system",
-                                content: `Kamu adalah Aurora AI Agent. Jawab pesan dengan ramah dan singkat. Hari ini tanggal ${hariIni} (zona waktu Asia/Jakarta).
-
-Kalau user minta dibuatkan jadwal/meeting/acara, LANGSUNG panggil function buat_jadwal_calendar tanpa perlu bertanya balik, selama judul, tanggal, dan jam sudah jelas. Hitung tanggal absolut sendiri kalau user bilang "besok"/"lusa"/"hari ini"/dll berdasarkan tanggal hari ini.
-
-Parameter attendees BERSIFAT OPSIONAL. Kalau user TIDAK menyebutkan email siapapun, panggil function itu TANPA parameter attendees sama sekali (jangan tanya balik "siapa yang diundang", jangan menunda pembuatan jadwal). Attendees hanya diisi KALAU user secara eksplisit menyebutkan alamat email orang yang mau diundang.`
-                            },
+                            { role: "system", content: systemPromptLengkap },
                             ...history
                         ],
                         tools: tools,
