@@ -186,7 +186,7 @@ async function panggilCerebras(systemPrompt, history, model) {
     };
 
     // Tambahkan tools hanya jika mendeteksi teks berkaitan dengan pembuatan jadwal kalender
-    const userMessage Terakhir = history[history.length - 1]?.content || "";
+    const userMessageTerakhir = history[history.length - 1]?.content || "";
     const butuhKalendar = /jadwal|kalender|meeting|acara|agenda|jam|tanggal/i.test(userMessageTerakhir);
     
     if (butuhKalendar) {
