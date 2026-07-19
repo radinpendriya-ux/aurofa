@@ -174,6 +174,33 @@ export default async function handler(req, res) {
                         console.error("❌ Gagal buat event:", JSON.stringify(hasilCalendar));
                         balasanFinal = "Maaf, gagal membuat jadwal di Calendar. Coba lagi ya.";
                     }
+                } else if (pesanAI?.content && pesanAI.content.includes('buat_jadwal_calendar')) {
+                    // FALLBACK: model kadang salah nulis function call sebagai teks biasa,
+                    // bukan lewat mekanisme tool_calls asli. Kita deteksi & tetap eksekusi.
+                    console.log("-> Terdeteksi function call ditulis sebagai teks, mencoba parse manual...");
+                    const jsonMatch = pesanAI.content.match(/\{[\s\S]*\}/);
+
+                    if (jsonMatch) {
+                        try {
+                            const args = JSON.parse(jsonMatch[0]);
+                            const hasilCalendar = await buatEventCalendar(args);
+
+                            if (hasilCalendar.id) {
+                                const daftarPeserta = (args.attendees && args.attendees.length > 0)
+                                    ? `\n👥 Mengundang: ${args.attendees.join(', ')}`
+                                    : '';
+                                balasanFinal = `✅ Jadwal berhasil dibuat!\n\n📌 ${args.judul}\n📅 ${args.tanggal}\n⏰ ${args.jam_mulai} - ${args.jam_selesai} WIB${daftarPeserta}`;
+                            } else {
+                                console.error("❌ Gagal buat event (fallback):", JSON.stringify(hasilCalendar));
+                                balasanFinal = "Maaf, gagal membuat jadwal di Calendar. Coba lagi ya.";
+                            }
+                        } catch (parseErr) {
+                            console.error("❌ Gagal parse JSON dari teks AI:", parseErr.message);
+                            balasanFinal = "Maaf, ada kendala memproses permintaan jadwal. Coba ulangi dengan format yang lebih jelas ya.";
+                        }
+                    } else {
+                        balasanFinal = "Maaf, ada kendala memproses permintaan jadwal. Coba ulangi ya.";
+                    }
                 } else {
                     balasanFinal = pesanAI?.content || "Maaf, Aurora AI sedang mengalami gangguan teknis.";
                 }
