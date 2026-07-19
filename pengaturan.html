@@ -24,7 +24,7 @@
     <option value="gemini">Google Gemini</option>
     <option value="mistral">Mistral AI</option>
     <option value="cerebras">Cerebras</option>
-    <option value="deepseek">DeepSeek</option> <!-- Tambahkan ini -->
+    <option value="deepseek">DeepSeek</option>
 </select>
 
 <label>Model</label>
@@ -69,7 +69,6 @@ function updateDropdownModel(providerTerpilih) {
     const modelSelect = document.getElementById('model');
     modelSelect.innerHTML = '';
     
-    // Pastikan provider yang dipilih ada di dalam daftarModel
     if (daftarModel[providerTerpilih]) {
         daftarModel[providerTerpilih].forEach(m => {
             const opt = document.createElement('option');
@@ -87,11 +86,18 @@ document.getElementById('provider').addEventListener('change', (e) => {
 async function muatPengaturanSaatIni() {
     try {
         const res = await fetch('/api/model-config');
+        if (!res.ok) throw new Error('Gagal mengambil config');
+        
         const data = await res.json();
-        document.getElementById('provider').value = data.provider;
-        updateDropdownModel(data.provider);
-        document.getElementById('model').value = data.model;
+        if (data && data.provider && data.model) {
+            document.getElementById('provider').value = data.provider;
+            updateDropdownModel(data.provider);
+            document.getElementById('model').value = data.model;
+        }
     } catch (err) {
+        console.warn("⚠️ Menggunakan fallback default akibat:", err.message);
+        // FIX: Samakan visual elemen provider dan isi opsi modelnya jika error
+        document.getElementById('provider').value = 'groq';
         updateDropdownModel('groq');
     }
 }
@@ -125,6 +131,10 @@ async function simpanPilihan() {
     }
 }
 
+// Langkah Awal: Isi opsi model pertama kali berdasarkan default HTML ('groq') agar tidak kosong saat loading
+updateDropdownModel(document.getElementById('provider').value);
+
+// Langkah Kedua: Tarik data asli dari database Vercel KV
 muatPengaturanSaatIni();
 </script>
 
