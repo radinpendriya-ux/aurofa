@@ -22,6 +22,8 @@
 <select id="provider">
     <option value="groq">Groq</option>
     <option value="gemini">Google Gemini</option>
+    <option value="mistral">Mistral AI</option>
+    <option value="cerebras">Cerebras</option>
 </select>
 
 <label>Model</label>
@@ -46,18 +48,31 @@ const daftarModel = {
         { value: "gemini-2.5-flash", label: "Gemini 2.5 Flash (sedang)" },
         { value: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash Lite (cepat)" },
         { value: "gemini-2.5-flash-lite", label: "Gemini 2.5 Flash Lite (lebih hemat & cepat)" }
+    ],
+    mistral: [
+        { value: "mistral-large-latest", label: "Mistral Large (Sangat pintar, penalaran kuat)" },
+        { value: "mistral-small-latest", label: "Mistral Small (Cepat & seimbang)" },
+        { value: "codestral-latest", label: "Codestral (Khusus untuk coding/agen teknis)" }
+    ],
+    cerebras: [
+        { value: "llama-3.3-70b", label: "Llama 3.3 70B (Pintar & inferensi super cepat)" },
+        { value: "llama-3.1-8b", label: "Llama 3.1 8B (Kecepatan ekstrem untuk agen)" }
     ]
 };
 
 function updateDropdownModel(providerTerpilih) {
     const modelSelect = document.getElementById('model');
     modelSelect.innerHTML = '';
-    daftarModel[providerTerpilih].forEach(m => {
-        const opt = document.createElement('option');
-        opt.value = m.value;
-        opt.textContent = m.label;
-        modelSelect.appendChild(opt);
-    });
+    
+    // Pastikan provider yang dipilih ada di dalam daftarModel
+    if (daftarModel[providerTerpilih]) {
+        daftarModel[providerTerpilih].forEach(m => {
+            const opt = document.createElement('option');
+            opt.value = m.value;
+            opt.textContent = m.label;
+            modelSelect.appendChild(opt);
+        });
+    }
 }
 
 document.getElementById('provider').addEventListener('change', (e) => {
