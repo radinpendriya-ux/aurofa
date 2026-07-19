@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Pengaturan Model AI - Aurofa</title>
+<style>
+    body { font-family: Arial, sans-serif; max-width: 480px; margin: 40px auto; padding: 0 20px; }
+    h2 { color: #25D366; }
+    label { display: block; margin-top: 16px; font-weight: bold; }
+    select, input { width: 100%; padding: 10px; margin-top: 6px; box-sizing: border-box; font-size: 16px; }
+    button { margin-top: 20px; width: 100%; padding: 12px; background-color: #25D366; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; }
+    #status { margin-top: 16px; padding: 10px; border-radius: 6px; display: none; }
+    .sukses { background-color: #d4edda; color: #155724; }
+    .gagal { background-color: #f8d7da; color: #721c24; }
+</style>
+</head>
+<body>
+
+<h2>⚙️ Pengaturan Model AI Aurofa</h2>
+
+<label>Provider</label>
+<select id="provider">
+    <option value="groq">Groq</option>
+    <option value="gemini">Google Gemini</option>
+</select>
+
+<label>Model</label>
+<select id="model"></select>
+
+<label>Kata Sandi Admin</label>
+<input type="password" id="secret" placeholder="Masukkan kata sandi">
+
+<button onclick="simpanPilihan()">Simpan Pengaturan</button>
+
+<div id="status"></div>
+
+<script>
+const daftarModel = {
+    groq: [
+        { value: "llama-3.3-70b-versatile", label: "Llama 3.3 70B (lebih pintar, sedikit lebih lambat)" },
+        { value: "llama-3.1-8b-instant", label: "Llama 3.1 8B (lebih cepat, lebih ringan)" }
+    ],
+    gemini: [
+        { value: "gemini-3.5-flash", label: "Gemini 3.5 Flash (paling baru & pintar)" },
+        { value: "gemini-2.5-flash-lite", label: "Gemini 2.5 Flash Lite (lebih hemat & cepat)" }
+    ]
+};
+
+function updateDropdownModel(providerTerpilih) {
+    const modelSelect = document.getElementById('model');
+    modelSelect.innerHTML = '';
+    daftarModel[providerTerpilih].forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.value;
+        opt.textContent = m.label;
+        modelSelect.appendChild(opt);
+    });
+}
+
+document.getElementById('provider').addEventListener('change', (e) => {
+    updateDropdownModel(e.target.value);
+});
+
+async function muatPengaturanSaatIni() {
+    try {
+        const res = await fetch('/api/model-config');
+        const data = await res.json();
+        document.getElementById('provider').value = data.provider;
+        updateDropdownModel(data.provider);
+        document.getElementById('model').value = data.model;
+    } catch (err) {
+        updateDropdownModel('groq');
+    }
+}
+
+async function simpanPilihan() {
+    const provider = document.getElementById('provider').value;
+    const model = document.getElementById('model').value;
+    const secret = document.getElementById('secret').value;
+    const statusEl = document.getElementById('status');
+
+    try {
+        const res = await fetch('/api/model-config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ provider, model, secret })
+        });
+        const hasil = await res.json();
+
+        statusEl.style.display = 'block';
+        if (res.ok) {
+            statusEl.className = 'sukses';
+            statusEl.textContent = `✅ Berhasil disimpan: ${provider} - ${model}`;
+        } else {
+            statusEl.className = 'gagal';
+            statusEl.textContent = `❌ ${hasil.error}`;
+        }
+    } catch (err) {
+        statusEl.style.display = 'block';
+        statusEl.className = 'gagal';
+        statusEl.textContent = '❌ Terjadi error koneksi.';
+    }
+}
+
+muatPengaturanSaatIni();
+</script>
+
+</body>
+</html>
