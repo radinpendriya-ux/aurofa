@@ -56,8 +56,9 @@ const daftarModel = {
         { value: "codestral-latest", label: "Codestral (Khusus untuk coding/agen teknis)" }
     ],
     cerebras: [
-        { value: "llama-3.3-70b", label: "Llama 3.3 70B (Pintar & inferensi super cepat)" },
-        { value: "llama-3.1-8b", label: "Llama 3.1 8B (Kecepatan ekstrem untuk agen)" }
+        { value: "gemma-4-31b", label: "Gemma 4 31B (Model Baru & Pintar)" },
+        { value: "zai-glm-4.7", label: "Z.ai GLM 4.7 (Penalaran Kuat)" },
+        { value: "gpt-oss-120b", label: "GPT-OSS 120B (Model Raksasa & Akurat)" }
     ],
     deepseek: [
         { value: "deepseek-chat", label: "DeepSeek-V3 (Cepat, pintar, seimbang)" },
@@ -96,7 +97,6 @@ async function muatPengaturanSaatIni() {
         }
     } catch (err) {
         console.warn("⚠️ Menggunakan fallback default akibat:", err.message);
-        // FIX: Samakan visual elemen provider dan isi opsi modelnya jika error
         document.getElementById('provider').value = 'groq';
         updateDropdownModel('groq');
     }
