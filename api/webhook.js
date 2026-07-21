@@ -312,7 +312,7 @@ export default async function handler(req, res) {
             }
 
             const metaAccessToken = process.env.META_ACCESS_TOKEN;
-            const metaPhoneNumberId = "1187789877749779";
+            const metaPhoneNumberId = "1277441265444622";
             const historyKey = `chat_history:${nomorPengirim}`;
 
             try {
