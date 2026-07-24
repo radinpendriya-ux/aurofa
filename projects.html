@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proyek Saya | Aurofa</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%); color: #334155; line-height: 1.7; padding: 24px; }
+        .container { max-width: 900px; margin: 30px auto; background: #ffffff; border-radius: 24px; box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08); overflow: hidden; }
+        .hero { padding: 36px 36px 24px; background: linear-gradient(135deg, #0f766e 0%, #2563eb 100%); color: white; }
+        nav { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
+        nav a { color: white; text-decoration: none; font-weight: 600; background: rgba(255,255,255,0.16); padding: 8px 12px; border-radius: 999px; }
+        h1 { font-size: 28px; margin-bottom: 8px; }
+        .intro { font-size: 16px; opacity: 0.95; }
+        .content { padding: 28px 36px 36px; }
+        .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+        .card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px; }
+        .card h2 { font-size: 16px; margin-bottom: 8px; color: #1e293b; }
+        .card p { font-size: 14px; color: #475569; }
+        .status { display: inline-block; margin-top: 10px; background: #dbeafe; color: #1d4ed8; padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+        @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="hero">
+            <nav>
+                <a href="index.html">Beranda</a>
+                <a href="about.html">Tentang Saya</a>
+                <a href="projects.html">Proyek</a>
+                <a href="gallery.html">Galeri</a>
+                <a href="privacy-policy.html">Privacy Policy</a>
+            </nav>
+            <h1>Proyek & Ide Saya</h1>
+            <p class="intro">Berikut beberapa karya dan ide yang sedang saya bangun untuk memperluas kemampuan saya.</p>
+        </div>
+        <div class="content">
+            <div class="grid">
+                <div class="card">
+                    <h2>🌐 Portofolio Pribadi</h2>
+                    <p>Website ini sendiri adalah proyek awal saya untuk menampilkan identitas dan aktivitas belajar secara online.</p>
+                    <span class="status">Sedang dikembangkan</span>
+                </div>
+                <div class="card">
+                    <h2>📋 Landing Page Sederhana</h2>
+                    <p>Dirancang untuk mempelajari struktur halaman yang menarik, jelas, dan responsive.</p>
+                    <span class="status">Dalam proses</span>
+                </div>
+                <div class="card">
+                    <h2>🔔 Reminder API</h2>
+                    <p>Memahami cara menghubungkan website dengan backend sederhana untuk fitur otomatisasi.</p>
+                    <span class="status">Belajar</span>
+                </div>
+                <div class="card">
+                    <h2>🛠️ UI Improvement</h2>
+                    <p>Menjelajahi desain antarmuka yang lebih modern, konsisten, dan nyaman dipakai.</p>
+                    <span class="status">Rencana</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
