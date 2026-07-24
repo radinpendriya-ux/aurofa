@@ -5,137 +5,271 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aurofa | Portofolio Pribadi</title>
     <link rel="icon" type="image/png" sizes="48x48" href="/favicon.png">
-<link rel="shortcut icon" href="/favicon.png">
-<link rel="apple-touch-icon" href="/favicon.png">
+    <link rel="shortcut icon" href="/favicon.png">
+    <link rel="apple-touch-icon" href="/favicon.png">
     <style>
-        /* Mengatur dasar halaman web */
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8fafc;
+            background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
             color: #334155;
             line-height: 1.6;
-            padding: 20px;
+            padding: 24px;
         }
 
-        /* Container utama agar konten berada di tengah */
         .container {
-            max-width: 600px;
-            margin: 50px auto;
+            max-width: 900px;
+            margin: 30px auto;
             background: #ffffff;
-            padding: 40px;
-            border-radius: 16px;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+            border-radius: 24px;
+            box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+            overflow: hidden;
+        }
+
+        .hero {
+            padding: 40px 40px 24px;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
             text-align: center;
         }
 
-        /* Desain foto profil lingkaran */
         .avatar {
             width: 120px;
             height: 120px;
             border-radius: 50%;
-            background-color: #cbd5e1;
+            background: rgba(255,255,255,0.2);
             margin: 0 auto 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 40px;
-            color: #64748b;
-            border: 4px solid #f1f5f9;
+            font-size: 48px;
+            border: 4px solid rgba(255,255,255,0.25);
         }
 
-        /* Tipografi / Tulisan */
         h1 {
-            font-size: 28px;
-            color: #1e293b;
+            font-size: 30px;
             margin-bottom: 8px;
         }
+
         .tagline {
-            font-size: 16px;
-            color: #6366f1;
+            font-size: 15px;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 20px;
-        }
-        .bio {
-            font-size: 16px;
-            color: #475569;
-            margin-bottom: 30px;
+            letter-spacing: 1.5px;
+            opacity: 0.95;
+            margin-bottom: 16px;
         }
 
-        /* Bagian tombol link/sosial media */
+        .bio {
+            max-width: 680px;
+            margin: 0 auto 20px;
+            font-size: 16px;
+            opacity: 0.95;
+        }
+
+        .chip-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .chip {
+            background: rgba(255,255,255,0.18);
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .content {
+            padding: 32px 40px 40px;
+        }
+
+        .section {
+            margin-bottom: 28px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 12px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .stat-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 16px;
+        }
+
+        .stat-card strong {
+            display: block;
+            font-size: 20px;
+            color: #312e81;
+            margin-bottom: 4px;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .info-card {
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 16px;
+        }
+
+        .info-card h3 {
+            font-size: 15px;
+            margin-bottom: 6px;
+            color: #1e293b;
+        }
+
+        .info-card p {
+            font-size: 14px;
+            color: #475569;
+        }
+
         .links-title {
             font-size: 14px;
-            font-weight: 600;
-            color: #94a3b8;
+            font-weight: 700;
             text-transform: uppercase;
-            margin-bottom: 15px;
-            text-align: left;
-            border-bottom: 1px solid #e2e8f0;
-            padding-bottom: 5px;
+            letter-spacing: 1px;
+            color: #64748b;
+            margin-bottom: 12px;
         }
+
         .link-card {
             display: block;
-            background: #f1f5f9;
+            background: #f8fafc;
             color: #1e293b;
             text-decoration: none;
-            padding: 14px;
-            margin-bottom: 12px;
-            border-radius: 8px;
-            font-weight: 500;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            font-weight: 600;
+            border: 1px solid #e2e8f0;
             transition: all 0.2s ease;
         }
-        /* Efek ketika tombol disorot kursor */
+
         .link-card:hover {
-            background: #6366f1;
+            background: #4f46e5;
             color: #ffffff;
             transform: translateY(-2px);
         }
 
-        /* Bagian kaki halaman (footer) */
         footer {
-            margin-top: 40px;
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid #e2e8f0;
             font-size: 13px;
             color: #94a3b8;
+            text-align: center;
+        }
+
+        @media (max-width: 760px) {
+            .stats-grid,
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero,
+            .content {
+                padding-left: 20px;
+                padding-right: 20px;
+            }
         }
     </style>
 </head>
 <body>
-
     <div class="container">
-        <!-- Foto Profil (Sementara menggunakan emoji, bisa Anda ganti nanti) -->
-        <div class="avatar">🚀</div>
+        <div class="hero">
+            <div class="avatar">🚀</div>
+            <h1>Aurofa</h1>
+            <div class="tagline">Pembelajar Coding Pemula & Penggemar Teknologi</div>
+            <p class="bio">
+                Selamat datang di website pribadi saya. Saya sedang membangun kemampuan di bidang web development,
+                UI, dan pemecahan masalah digital dengan cara yang sederhana, konsisten, dan terus berkembang.
+            </p>
+            <div class="chip-list">
+                <span class="chip">HTML</span>
+                <span class="chip">CSS</span>
+                <span class="chip">JavaScript</span>
+                <span class="chip">GitHub</span>
+                <span class="chip">Vercel</span>
+            </div>
+        </div>
 
-        <!-- Nama Anda -->
-        <h1>Aurofa</h1>
-        
-        <!-- Pekerjaan / Status Belajar -->
-        <div class="tagline">Pembelajar Coding Pemula</div>
-        
-        <!-- Kalimat perkenalan singkat -->
-        <p class="bio">
-            Halo! Selamat datang di website pribadi saya. Halaman ini dibuat menggunakan kolaborasi antara <strong>GitHub</strong> untuk menyimpan kode dan <strong>Vercel</strong> sebagai hostingnya. Saat ini saya sedang menantang diri sendiri untuk belajar pemrograman web dari nol.
-        </p>
+        <div class="content">
+            <div class="section">
+                <div class="section-title">Ringkasan Singkat</div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <strong>3+</strong>
+                        <span>Area yang sedang dipelajari</span>
+                    </div>
+                    <div class="stat-card">
+                        <strong>100%</strong>
+                        <span>Semangat belajar setiap hari</span>
+                    </div>
+                    <div class="stat-card">
+                        <strong>1</strong>
+                        <span>Website pribadi yang terus dikembangkan</span>
+                    </div>
+                </div>
+            </div>
 
-        <!-- Judul Sosial Media -->
-        <div class="links-title">Hubungi Saya</div>
+            <div class="section">
+                <div class="section-title">Yang Sedang Saya Fokuskan</div>
+                <div class="cards-grid">
+                    <div class="info-card">
+                        <h3>🌐 Pemrograman Web</h3>
+                        <p>Saya belajar membuat tampilan yang rapi, responsif, dan nyaman digunakan.</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>🧠 Problem Solving</h3>
+                        <p>Latihan berpikir logis dan menyelesaikan tantangan coding secara bertahap.</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>🎨 Desain UI</h3>
+                        <p>Memperhatikan warna, spacing, dan pengalaman pengguna agar situs lebih menarik.</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>🚀 Belajar Berkelanjutan</h3>
+                        <p>Setiap hari saya mencoba hal baru dan memperbaiki kualitas karya saya.</p>
+                    </div>
+                </div>
+            </div>
 
-        <!-- Daftar Tombol Link (Ganti tanda # dengan link asli Anda nanti) -->
-        <a href="https://www.instagram.com/radin_pendriya/" class="link-card" target="_blank">📸 Instagram</a>
-        <a href="https://www.linkedin.com/in/radin-pendriya-738176267/" class="link-card" target="_blank">💼 LinkedIn</a>
-        <a href="https://github.com/radinpendriya-ux" class="link-card" target="_blank">💻 GitHub Profil</a>
-        <a href="mailto:radinpendriya@gmail.com" class="link-card">✉️ Kirim Email</a>
+            <div class="section">
+                <div class="links-title">Hubungi Saya</div>
+                <a href="https://www.instagram.com/radin_pendriya/" class="link-card" target="_blank">📸 Instagram</a>
+                <a href="https://www.linkedin.com/in/radin-pendriya-738176267/" class="link-card" target="_blank">💼 LinkedIn</a>
+                <a href="https://github.com/radinpendriya-ux" class="link-card" target="_blank">💻 GitHub Profil</a>
+                <a href="mailto:radinpendriya@gmail.com" class="link-card">✉️ Kirim Email</a>
 
-        <!-- Footer -->
-        <footer>
-            &copy; 2026 aurofa.com. Didukung oleh Vercel.
-        </footer>
+                <footer>
+                    &copy; 2026 aurofa.com. Didukung oleh Vercel.
+                </footer>
+            </div>
+        </div>
     </div>
-
 </body>
 </html>
