@@ -3,56 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Galeri Belajar | Aurofa</title>
+    <meta name="facebook-domain-verification" content="duiuv4hkfz9ovo5s0au3d5vru2dxsc" />
+    <meta name="description" content="Galeri foto produk, dokumentasi toko, dan aktivitas Syafaa Kurma.">
+    <title>Galeri | Syafaa Kurma</title>
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon.png">
+    <link rel="shortcut icon" href="/favicon.png">
+    <link rel="apple-touch-icon" href="/favicon.png">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%); color: #334155; line-height: 1.7; padding: 24px; }
-        .container { max-width: 900px; margin: 30px auto; background: #ffffff; border-radius: 24px; box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08); overflow: hidden; }
-        .hero { padding: 36px 36px 24px; background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%); color: white; }
-        nav { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
-        nav a { color: white; text-decoration: none; font-weight: 600; background: rgba(255,255,255,0.16); padding: 8px 12px; border-radius: 999px; }
-        h1 { font-size: 28px; margin-bottom: 8px; }
-        .intro { font-size: 16px; opacity: 0.95; }
-        .content { padding: 28px 36px 36px; }
-        .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
-        .card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px; }
-        .card h2 { font-size: 16px; margin-bottom: 8px; color: #1e293b; }
-        .card p { font-size: 14px; color: #475569; }
-        @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #fdf6e9 0%, #fbf1e0 100%);
+            color: #3f2e18;
+            line-height: 1.7;
+            padding: 24px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 20px 45px rgba(87, 60, 20, 0.1);
+            overflow: hidden;
+        }
+        .hero {
+            padding: 40px;
+            background: linear-gradient(135deg, #166534 0%, #b45309 100%);
+            color: white;
+            text-align: center;
+        }
+        .hero h1 { font-size: 28px; margin-bottom: 8px; }
+        .hero p { opacity: 0.95; font-size: 15px; }
+        .nav {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            padding: 16px 20px;
+            background: #fdf6e9;
+            border-bottom: 1px solid #f0e2c4;
+        }
+        .nav a {
+            text-decoration: none;
+            color: #166534;
+            font-weight: 600;
+            font-size: 13px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: #ffffff;
+            border: 1px solid #f0e2c4;
+        }
+        .content { padding: 32px 40px 40px; }
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+        }
+        .gallery-card {
+            background: #fdf6e9;
+            border: 1px solid #f0e2c4;
+            border-radius: 14px;
+            overflow: hidden;
+            text-align: center;
+        }
+        .gallery-placeholder {
+            width: 100%;
+            height: 160px;
+            background: #e2d3b4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+        }
+        .gallery-card img {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            display: block;
+        }
+        .gallery-title {
+            padding: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #3f2e18;
+        }
+        footer {
+            margin-top: 32px;
+            padding-top: 16px;
+            border-top: 1px solid #f0e2c4;
+            font-size: 13px;
+            color: #a3875c;
+            text-align: center;
+        }
+        @media (max-width: 760px) {
+            .gallery-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .hero, .content { padding-left: 20px; padding-right: 20px; }
+        }
+        @media (max-width: 480px) {
+            .gallery-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="hero">
-            <nav>
-                <a href="index.html">Beranda</a>
-                <a href="about.html">Tentang Saya</a>
-                <a href="projects.html">Proyek</a>
-                <a href="gallery.html">Galeri</a>
-                <a href="privacy-policy.html">Privacy Policy</a>
-            </nav>
-            <h1>Galeri Belajar</h1>
-            <p class="intro">Kumpulan elemen visual dan inspirasi yang sedang saya gunakan dalam proses belajar desain dan web.</p>
+            <h1>Galeri Foto</h1>
+            <p>Dokumentasi produk, pengemasan, dan aktivitas Syafaa Kurma</p>
         </div>
+
+        <div class="nav">
+            <a href="index.html">Beranda</a>
+            <a href="about.html">Tentang Kami</a>
+            <a href="produk.html">Produk</a>
+            <a href="gallery.html" style="background: #166534; color: #fff;">Galeri</a>
+            <a href="pengaturan.html">Pengaturan</a>
+        </div>
+
         <div class="content">
-            <div class="grid">
-                <div class="card">
-                    <h2>🎨 Palet Warna</h2>
-                    <p>Warna biru, ungu, dan putih menjadi dominan karena terasa modern dan bersih.</p>
+            <div class="gallery-grid">
+                <div class="gallery-card">
+                    <div class="gallery-placeholder">🌴</div>
+                    <div class="gallery-title">Kurma Sukari Premium</div>
                 </div>
-                <div class="card">
-                    <h2>🧩 Komponen UI</h2>
-                    <p>Saya senang mempelajari tombol, kartu, badge, dan layout yang sederhana namun estetik.</p>
+                <div class="gallery-card">
+                    <div class="gallery-placeholder">🍯</div>
+                    <div class="gallery-title">Madu Murni Asli</div>
                 </div>
-                <div class="card">
-                    <h2>📈 Progress Belajar</h2>
-                    <p>Setiap halaman yang dibuat menjadi bukti perkembangan dari kemampuan saya.</p>
+                <div class="gallery-card">
+                    <div class="gallery-placeholder">🕋</div>
+                    <div class="gallery-title">Paket Oleh-Oleh Haji</div>
                 </div>
-                <div class="card">
-                    <h2>✨ Inspirasi</h2>
-                    <p>Belajar dari banyak contoh desain yang simpel, rapi, dan mudah dipahami.</p>
+                <div class="gallery-card">
+                    <div class="gallery-placeholder">📦</div>
+                    <div class="gallery-title">Proses Pengemasan</div>
+                </div>
+                <div class="gallery-card">
+                    <div class="gallery-placeholder">🏬</div>
+                    <div class="gallery-title">Toko Fisik Boyolali</div>
+                </div>
+                <div class="gallery-card">
+                    <div class="gallery-placeholder">✨</div>
+                    <div class="gallery-title">Kualitas Terjamin</div>
                 </div>
             </div>
+
+            <footer>
+                &copy; 2026 Syafaa Kurma. Semua hak dilindungi.<br>
+                <a href="privacy-policy.html" style="color: #166534; text-decoration: none; font-weight: 600;">Privacy Policy</a>
+            </footer>
         </div>
     </div>
 </body>
