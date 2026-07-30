@@ -1,142 +1,161 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<title>Pengaturan Model AI - Aurofa</title>
-<style>
-    body { font-family: Arial, sans-serif; max-width: 480px; margin: 40px auto; padding: 0 20px; }
-    h2 { color: #25D366; }
-    label { display: block; margin-top: 16px; font-weight: bold; }
-    select, input { width: 100%; padding: 10px; margin-top: 6px; box-sizing: border-box; font-size: 16px; }
-    button { margin-top: 20px; width: 100%; padding: 12px; background-color: #25D366; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; }
-    #status { margin-top: 16px; padding: 10px; border-radius: 6px; display: none; }
-    .sukses { background-color: #d4edda; color: #155724; }
-    .gagal { background-color: #f8d7da; color: #721c24; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="facebook-domain-verification" content="duiuv4hkfz9ovo5s0au3d5vru2dxsc" />
+    <meta name="description" content="Pengaturan tampilan dan preferensi Syafaa Kurma.">
+    <title>Pengaturan | Syafaa Kurma</title>
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon.png">
+    <link rel="shortcut icon" href="/favicon.png">
+    <link rel="apple-touch-icon" href="/favicon.png">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #fdf6e9 0%, #fbf1e0 100%);
+            color: #3f2e18;
+            line-height: 1.7;
+            padding: 24px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 20px 45px rgba(87, 60, 20, 0.1);
+            overflow: hidden;
+        }
+        .hero {
+            padding: 40px;
+            background: linear-gradient(135deg, #166534 0%, #b45309 100%);
+            color: white;
+            text-align: center;
+        }
+        .hero h1 { font-size: 28px; margin-bottom: 8px; }
+        .hero p { opacity: 0.95; font-size: 15px; }
+        .nav {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            padding: 16px 20px;
+            background: #fdf6e9;
+            border-bottom: 1px solid #f0e2c4;
+        }
+        .nav a {
+            text-decoration: none;
+            color: #166534;
+            font-weight: 600;
+            font-size: 13px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: #ffffff;
+            border: 1px solid #f0e2c4;
+        }
+        .content { padding: 32px 40px 40px; }
+        .setting-card {
+            background: linear-gradient(180deg, #ffffff 0%, #fdf6e9 100%);
+            border: 1px solid #f0e2c4;
+            border-radius: 14px;
+            padding: 18px 20px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .setting-info h3 { font-size: 15px; color: #3f2e18; margin-bottom: 4px; }
+        .setting-info p { font-size: 13px; color: #6b4f2a; }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 46px;
+            height: 24px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .3s;
+            border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px; width: 18px;
+            left: 3px; bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #166534; }
+        input:checked + .slider:before { transform: translateX(22px); }
+        footer {
+            margin-top: 32px;
+            padding-top: 16px;
+            border-top: 1px solid #f0e2c4;
+            font-size: 13px;
+            color: #a3875c;
+            text-align: center;
+        }
+        @media (max-width: 760px) {
+            .hero, .content { padding-left: 20px; padding-right: 20px; }
+        }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <div class="hero">
+            <h1>Pengaturan</h1>
+            <p>Atur preferensi kenyamanan tampilan situs Anda</p>
+        </div>
 
-<h2>⚙️ Pengaturan Model AI Aurofa</h2>
+        <div class="nav">
+            <a href="index.html">Beranda</a>
+            <a href="about.html">Tentang Kami</a>
+            <a href="produk.html">Produk</a>
+            <a href="gallery.html">Galeri</a>
+            <a href="pengaturan.html" style="background: #166534; color: #fff;">Pengaturan</a>
+        </div>
 
-<label>Provider</label>
-<select id="provider">
-    <option value="groq">Groq</option>
-    <option value="gemini">Google Gemini</option>
-    <option value="mistral">Mistral AI</option>
-    <option value="cerebras">Cerebras</option>
-    <option value="deepseek">DeepSeek</option>
-</select>
+        <div class="content">
+            <div class="setting-card">
+                <div class="setting-info">
+                    <h3>🔔 Notifikasi WhatsApp</h3>
+                    <p>Terima pembaruan promo langsung melalui pesan WhatsApp.</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
 
-<label>Model</label>
-<select id="model"></select>
+            <div class="setting-card">
+                <div class="setting-info">
+                    <h3>🌐 Bahasa</h3>
+                    <p>Bahasa default situs (Bahasa Indonesia).</p>
+                </div>
+                <span style="font-size: 13px; font-weight: 600; color: #166534;">ID</span>
+            </div>
 
-<label>Kata Sandi Admin</label>
-<input type="password" id="secret" placeholder="Masukkan kata sandi">
+            <div class="setting-card">
+                <div class="setting-info">
+                    <h3>💾 Simpan Riwayat</h3>
+                    <p>Menyimpan preferensi penelusuran produk di perangkat Anda.</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
 
-<button onclick="simpanPilihan()">Simpan Pengaturan</button>
-
-<div id="status"></div>
-
-<script>
-const daftarModel = {
-    groq: [
-        { value: "llama-3.3-70b-versatile", label: "Llama 3.3 70B (lebih pintar, sedikit lebih lambat)" },
-        { value: "llama-3.1-8b-instant", label: "Llama 3.1 8B (lebih cepat, lebih ringan)" }
-    ],
-    gemini: [
-        { value: "gemini-3.5-flash", label: "Gemini 3.5 Flash (paling baru & pintar)" },
-        { value: "gemini-3-flash", label: "Gemini 3 Flash (pintar)" },
-        { value: "gemini-2.5-flash", label: "Gemini 2.5 Flash (sedang)" },
-        { value: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash Lite (cepat)" },
-        { value: "gemini-2.5-flash-lite", label: "Gemini 2.5 Flash Lite (lebih hemat & cepat)" }
-    ],
-    mistral: [
-        { value: "mistral-large-latest", label: "Mistral Large (Sangat pintar, penalaran kuat)" },
-        { value: "mistral-small-latest", label: "Mistral Small (Cepat & seimbang)" },
-        { value: "codestral-latest", label: "Codestral (Khusus untuk coding/agen teknis)" }
-    ],
-    cerebras: [
-        { value: "gemma-4-31b", label: "Gemma 4 31B (Model Baru & Pintar)" },
-        { value: "zai-glm-4.7", label: "Z.ai GLM 4.7 (Penalaran Kuat)" },
-        { value: "gpt-oss-120b", label: "GPT-OSS 120B (Model Raksasa & Akurat)" }
-    ],
-    deepseek: [
-        { value: "deepseek-chat", label: "DeepSeek-V3 (Cepat, pintar, seimbang)" },
-        { value: "deepseek-reasoning", label: "DeepSeek-R1 (Model penalaran/berpikir mendalam)" }
-    ]
-};
-
-function updateDropdownModel(providerTerpilih) {
-    const modelSelect = document.getElementById('model');
-    modelSelect.innerHTML = '';
-    
-    if (daftarModel[providerTerpilih]) {
-        daftarModel[providerTerpilih].forEach(m => {
-            const opt = document.createElement('option');
-            opt.value = m.value;
-            opt.textContent = m.label;
-            modelSelect.appendChild(opt);
-        });
-    }
-}
-
-document.getElementById('provider').addEventListener('change', (e) => {
-    updateDropdownModel(e.target.value);
-});
-
-async function muatPengaturanSaatIni() {
-    try {
-        const res = await fetch('/api/model-config');
-        if (!res.ok) throw new Error('Gagal mengambil config');
-        
-        const data = await res.json();
-        if (data && data.provider && data.model) {
-            document.getElementById('provider').value = data.provider;
-            updateDropdownModel(data.provider);
-            document.getElementById('model').value = data.model;
-        }
-    } catch (err) {
-        console.warn("⚠️ Menggunakan fallback default akibat:", err.message);
-        document.getElementById('provider').value = 'groq';
-        updateDropdownModel('groq');
-    }
-}
-
-async function simpanPilihan() {
-    const provider = document.getElementById('provider').value;
-    const model = document.getElementById('model').value;
-    const secret = document.getElementById('secret').value;
-    const statusEl = document.getElementById('status');
-
-    try {
-        const res = await fetch('/api/model-config', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ provider, model, secret })
-        });
-        const hasil = await res.json();
-
-        statusEl.style.display = 'block';
-        if (res.ok) {
-            statusEl.className = 'sukses';
-            statusEl.textContent = `✅ Berhasil disimpan: ${provider} - ${model}`;
-        } else {
-            statusEl.className = 'gagal';
-            statusEl.textContent = `❌ ${hasil.error}`;
-        }
-    } catch (err) {
-        statusEl.style.display = 'block';
-        statusEl.className = 'gagal';
-        statusEl.textContent = '❌ Terjadi error koneksi.';
-    }
-}
-
-// Langkah Awal: Isi opsi model pertama kali berdasarkan default HTML ('groq') agar tidak kosong saat loading
-updateDropdownModel(document.getElementById('provider').value);
-
-// Langkah Kedua: Tarik data asli dari database Vercel KV
-muatPengaturanSaatIni();
-</script>
-
+            <footer>
+                &copy; 2026 Syafaa Kurma. Semua hak dilindungi.<br>
+                <a href="privacy-policy.html" style="color: #166534; text-decoration: none; font-weight: 600;">Privacy Policy</a>
+            </footer>
+        </div>
+    </div>
 </body>
 </html>
